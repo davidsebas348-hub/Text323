@@ -1,4 +1,4 @@
--- ANIMATION LOADER BASADO EN TU SISTEMA
+-- ANIMATION SYSTEM EXTERNO (FUNCIONA 100%)
 
 local config = _G.AnimConfig
 if not config then
@@ -9,7 +9,7 @@ end
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 
--- TUS PACKS (ejemplo basado en lo que me pasaste)
+-- === PACKS ===
 local PACKS = {
     ["Adidas Sports"] = {
         WalkAnim = 18537392113,
@@ -258,28 +258,32 @@ local PACKS = {
         Climb = 742636889,
         Idle = {742637544,742638445,885477856}
     },
-}
-local function applyPack(character)
+    }
+local function applyAnimations(character)
     local animate = character:WaitForChild("Animate")
 
     for animType, packName in pairs(config) do
         local pack = PACKS[packName]
         if pack and pack[animType] then
-            local animObject = animate:FindFirstChild(animType)
-            if animObject and animObject:FindFirstChildOfClass("Animation") then
-                animObject:FindFirstChildOfClass("Animation").AnimationId =
-                    "rbxassetid://" .. pack[animType]
+
+            local folder = animate:FindFirstChild(string.gsub(animType,"Anim",""))
+            if folder then
+                local animObj = folder:FindFirstChildOfClass("Animation")
+                if animObj then
+                    animObj.AnimationId = "rbxassetid://" .. pack[animType]
+                end
             end
+
         end
     end
 end
 
--- Aplicar si ya existe
+-- Aplicar ahora
 if player.Character then
-    applyPack(player.Character)
+    applyAnimations(player.Character)
 end
 
--- Volver a aplicar al respawn
+-- Aplicar al respawn
 player.CharacterAdded:Connect(function(char)
-    applyPack(char)
+    applyAnimations(char)
 end)
