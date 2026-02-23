@@ -1,10 +1,6 @@
--- ANIMATION SYSTEM EXTERNO (FUNCIONA 100%)
-
-local config = _G.AnimConfig
-if not config then
-    warn("No se encontró _G.AnimConfig")
-    return
-end
+-- Asegúrate de definir _G.AnimConfig ANTES de esto
+-- Ejemplo:
+-- _G.AnimConfig = {Walk="Ninja", Run="Adidas Aura"}
 
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
@@ -258,32 +254,77 @@ local PACKS = {
         Climb = 742636889,
         Idle = {742637544,742638445,885477856}
     },
-    }
-local function applyAnimations(character)
-    local animate = character:WaitForChild("Animate")
+}
+-- Funciones de animación
+local function ensureAnim(folder,name)
+    if not folder then return nil end
+    local a = folder:FindFirstChild(name)
+    if not a then
+        a = Instance.new("Animation")
+        a.Name = name
+        a.Parent = folder
+    end
+    return a
+end
 
-    for animType, packName in pairs(config) do
-        local pack = PACKS[packName]
-        if pack and pack[animType] then
-
-            local folder = animate:FindFirstChild(string.gsub(animType,"Anim",""))
-            if folder then
-                local animObj = folder:FindFirstChildOfClass("Animation")
-                if animObj then
-                    animObj.AnimationId = "rbxassetid://" .. pack[animType]
-                end
-            end
-
-        end
+local function setAnim(animObj, id)
+    if animObj and id then
+        animObj.AnimationId = "rbxassetid://"..tostring(id)
     end
 end
 
--- Aplicar ahora
-if player.Character then
-    applyAnimations(player.Character)
+local function stopAllTracks(hum)
+    if not hum then return end
+    for _, t in ipairs(hum:GetPlayingAnimationTracks()) do
+        pcall(function() t:Stop(0) end)
+    end
 end
 
--- Aplicar al respawn
+local function applyConfigAnims(char)
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    local animate = char:FindFirstChild("Animate")
+    if not hum or not animate then return end
+    stopAllTracks(hum)
+
+    local walkObj = ensureAnim(animate:FindFirstChild("walk"), "WalkAnim")
+    local runObj = ensureAnim(animate:FindFirstChild("run"), "RunAnim")
+    local jumpObj = ensureAnim(animate:FindFirstChild("jump"), "JumpAnim")
+    local fallObj = ensureAnim(animate:FindFirstChild("fall"), "FallAnim")
+    local climbObj = ensureAnim(animate:FindFirstChild("climb"), "ClimbAnim")
+    local swimObj = ensureAnim(animate:FindFirstChild("swim"), "Swim")
+    local swimIdleObj = ensureAnim(animate:FindFirstChild("swimidle"), "SwimIdle")
+    local idleFolder = animate:FindFirstChild("idle")
+    if idleFolder then
+        ensureAnim(idleFolder,"Animation1")
+        ensureAnim(idleFolder,"Animation2")
+    end
+
+    for animName, packName in pairs(_G.AnimConfig or {}) do
+        local pack = PACKS[packName]
+        if not pack then continue end
+        if animName == "Walk" then setAnim(walkObj, pack.WalkAnim) end
+        if animName == "Run" then setAnim(runObj, pack.RunAnim) end
+        if animName == "Jump" then setAnim(jumpObj, pack.JumpAnim) end
+        if animName == "Fall" then setAnim(fallObj, pack.FallAnim) end
+        if animName == "Climb" then setAnim(climbObj, pack.ClimbAnim) end
+        if animName == "Swim" then setAnim(swimObj, pack.Swim) end
+        if animName == "SwimIdle" then setAnim(swimIdleObj, pack.SwimIdle) end
+        if animName == "Animation1" then setAnim(idleFolder:FindFirstChild("Animation1"), pack.Animation1) end
+        if animName == "Animation2" then setAnim(idleFolder:FindFirstChild("Animation2"), pack.Animation2) end
+    end
+
+    animate.Disabled = true
+    task.wait(0.05)
+    animate.Disabled = false
+end
+
+-- Aplicar al morir/reaparecer
 player.CharacterAdded:Connect(function(char)
-    applyAnimations(char)
+    task.wait(0.6)
+    applyConfigAnims(char)
 end)
+
+-- Aplicar inmediatamente si ya hay personaje
+if player.Character then
+    applyConfigAnims(player.Character)
+end
