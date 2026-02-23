@@ -309,7 +309,7 @@ local function applyConfigAnims(char)
         ensureAnim(idleFolder,"Animation2")
     end
 
-    for animName, packName in pairs(_G.AnimConfig or {}) do
+    for animName, packName in pairs(config or {}) do
         local pack = PACKS[packName]
         if not pack then continue end
         if animName == "Walk" then setAnim(walkObj, pack.WalkAnim) end
