@@ -5,6 +5,16 @@
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 
+local config = getgenv().AnimConfig
+if not config then return end
+
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+
+-- ejemplo solo Run
+if config.Run == "Ninja" then
+    humanoid:LoadAnimation(Instance.new("Animation", humanoid)).AnimationId = "rbxassetid://656118852"
+end
 -- === PACKS ===
 local PACKS = {
     ["Adidas Sports"] = {
